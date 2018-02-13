@@ -1,48 +1,59 @@
-
-def get_token(lexeme):
-    if lexeme == '>':
-        return {'tag': 'address', 'value': 1}
-
-    if lexeme == '<':
-        return {'tag': 'address', 'value': -1}
-
-    if lexeme == '+':
-        return {'tag': 'cell value', 'value': 1}
-
-    if lexeme == '-':
-        return {'tag': 'cell value', 'value': -1}
-
-    if lexeme == '.':
-        return {'tag': 'output'}
-
-    if lexeme == ',':
-        return {'tag': 'input'}
-
-    if lexeme == '[':
-        return {'tag': 'start loop'}
-
-    if lexeme == ']':
-        return {'tag': 'end loop'}
-
-    return None
-
 def build_ast(raw_bf_code):
-    accumulator = []
+    tokens = [{'tag': ''}]
 
-    for token in filter(bool, map(get_token, raw_bf_code)):
-        if not accumulator:
-            accumulator.append(token)
-        elif token['tag'] == accumulator[-1]['tag'] and token['tag'] in ['address', 'cell value']:
-            value = token['value'] + accumulator[-1]['value']
+    for lexeme in raw_bf_code:
+        if lexeme == '>':
+            if tokens[-1]['tag'] == 'address':
+                if tokens[-1]['value'] == -1:
+                    del tokens[-1]
+                else:
+                    tokens[-1]['value'] += 1
+            else:
+                tokens.append({'tag': 'address', 'value': 1})
 
-            if value != 0:
-                accumulator[-1] = {'tag': token['tag'], 'value': value}
-        elif token['tag'] == 'end loop' and accumulator[-1]['tag'] == 'start loop':
-            del accumulator[-1]
-        else:
-            accumulator.append(token)
+        elif lexeme == '<':
+            if tokens[-1]['tag'] == 'address':
+                if tokens[-1]['value'] == 1:
+                    del tokens[-1]
+                else:
+                    tokens[-1]['value'] -= 1
+            else:
+                tokens.append({'tag': 'address', 'value': -1})
 
-    return accumulator
+        elif lexeme == '+':
+            if tokens[-1]['tag'] == 'cell value':
+                if tokens[-1]['value'] == -1:
+                    del tokens[-1]
+                else:
+                    tokens[-1]['value'] += 1
+            else:
+                tokens.append({'tag': 'cell value', 'value': 1})
+
+        elif lexeme == '-':
+            if tokens[-1]['tag'] == 'cell value':
+                if tokens[-1]['value'] == 1:
+                    del tokens[-1]
+                else:
+                    tokens[-1]['value'] -= 1
+            else:
+                tokens.append({'tag': 'cell value', 'value': -1})
+
+        elif lexeme == '.':
+            tokens.append({'tag': 'output'})
+
+        elif lexeme == ',':
+            tokens.append({'tag': 'input'})
+
+        elif lexeme == '[':
+            tokens.append({'tag': 'start loop'})
+
+        elif lexeme == ']':
+            if tokens[-1]['tag'] == 'start loop':
+                del tokens[-1]
+            else:
+                tokens.append({'tag': 'end loop'})
+
+    return tokens[1:]
 
 def build_py_code(ast, indentation='    '):
     level = 0
