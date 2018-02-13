@@ -55,7 +55,11 @@ def build_ast(raw_bf_code):
 
     return tokens[1:]
 
-def build_py_code(ast, indentation='    '):
+def generate_py_code(ast, indentation='    '):
+    def incrementer(n):
+        sign = '+' if n > 0 else '-'
+        return sign + '= ' + str(abs(n))
+
     level = 0
     statements = [
         'from collections import defaultdict',
@@ -65,15 +69,11 @@ def build_py_code(ast, indentation='    '):
 
     for node in ast:
         if node['tag'] == 'address':
-            start = indentation * level + 'cell_addr '
-            middle = '+= ' if node['value'] > 0 else '-= '
-            end = str(abs(node['value']))
-            statements.append(start + middle + end)
+            n = node['value']
+            statements.append(indentation * level + 'cell_addr ' + incrementer(n))
         elif node['tag'] == 'cell value':
-            start = indentation * level + 'cells[cell_addr] '
-            middle = '+= ' if node['value'] > 0 else '-= '
-            end = str(abs(node['value']))
-            statements.append(start + middle + end)
+            n = node['value']
+            statements.append(indentation * level + 'cells[cell_addr] ' + incrementer(n))
         elif node['tag'] == 'output':
             statements.append(indentation * level + 'print(chr(cells[cell_addr]), end="")')
         elif node['tag'] == 'input':
@@ -87,7 +87,7 @@ def build_py_code(ast, indentation='    '):
     return '\n'.join(statements)
 
 def brainfuck_to_python(raw_bf_code):
-    return build_py_code(build_ast(raw_bf_code))
+    return generate_py_code(build_ast(raw_bf_code))
 
 def main():
     with open('test1.bf') as bf_file:
