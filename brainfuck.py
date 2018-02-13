@@ -55,7 +55,7 @@ def build_ast(raw_bf_code):
 
     return tokens[1:]
 
-def generate_py_code(ast, indentation='    '):
+def emit_py_code(ast, indentation='    '):
     def incrementer(n):
         sign = '+' if n > 0 else '-'
         return sign + '= ' + str(abs(n))
@@ -87,7 +87,7 @@ def generate_py_code(ast, indentation='    '):
     return '\n'.join(statements)
 
 def brainfuck_to_python(raw_bf_code):
-    return generate_py_code(build_ast(raw_bf_code))
+    return emit_py_code(build_ast(raw_bf_code))
 
 def main():
     with open('test1.bf') as bf_file:
