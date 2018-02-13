@@ -1,4 +1,50 @@
-def brainfuck_to_python(tokens, indentation='    '):
+
+def get_token(lexeme):
+    if lexeme == '>':
+        return {'tag': 'address', 'value': 1}
+
+    if lexeme == '<':
+        return {'tag': 'address', 'value': -1}
+
+    if lexeme == '+':
+        return {'tag': 'cell value', 'value': 1}
+
+    if lexeme == '-':
+        return {'tag': 'cell value', 'value': -1}
+
+    if lexeme == '.':
+        return {'tag': 'output'}
+
+    if lexeme == ',':
+        return {'tag': 'input'}
+
+    if lexeme == '[':
+        return {'tag': 'start loop'}
+
+    if lexeme == ']':
+        return {'tag': 'end loop'}
+
+    return None
+
+def build_ast(raw_bf_code):
+    accumulator = []
+
+    for token in filter(bool, map(get_token, raw_bf_code)):
+        if not accumulator:
+            accumulator.append(token)
+        elif token['tag'] not in ['address', 'cell value']:
+            accumulator.append(token)
+        elif token['tag'] != accumulator[-1]['tag']:
+            accumulator.append(token)
+        else:
+            value = token['value'] + accumulator[-1]['value']
+
+            if value != 0:
+                accumulator[-1] = {'tag': token['tag'], 'value': value}
+
+    return accumulator
+
+def build_py_code(ast, indentation='    '):
     level = 0
     statements = [
         'from collections import defaultdict',
@@ -6,26 +52,31 @@ def brainfuck_to_python(tokens, indentation='    '):
         'cell_addr = 0'
     ]
 
-    for token in tokens:
-        if token == '>':
-            statements.append(indentation * level + 'cell_addr += 1')
-        elif token == '<':
-            statements.append(indentation * level + 'cell_addr -= 1')
-        elif token == '+':
-            statements.append(indentation * level + 'cells[cell_addr] += 1')
-        elif token == '-':
-            statements.append(indentation * level + 'cells[cell_addr] -= 1')
-        elif token == '.':
+    for node in ast:
+        if node['tag'] == 'address':
+            start = indentation * level + 'cell_addr '
+            middle = '+= ' if node['value'] > 0 else '-= '
+            end = str(abs(node['value']))
+            statements.append(start + middle + end)
+        elif node['tag'] == 'cell value':
+            start = indentation * level + 'cells[cell_addr] '
+            middle = '+= ' if node['value'] > 0 else '-= '
+            end = str(abs(node['value']))
+            statements.append(start + middle + end)
+        elif node['tag'] == 'output':
             statements.append(indentation * level + 'print(chr(cells[cell_addr]), end="")')
-        elif token == ',':
+        elif node['tag'] == 'input':
             statements.append(indentation * level + 'cells[cell_addr] = ord(input())')
-        elif token == '[':
+        elif node['tag'] == 'start loop':
             statements.append(indentation * level + 'while cells[cell_addr]:')
             level += 1
-        elif token == ']':
+        elif node['tag'] == 'end loop':
             level -= 1
 
     return '\n'.join(statements)
+
+def brainfuck_to_python(raw_bf_code):
+    return build_py_code(build_ast(raw_bf_code))
 
 def main():
     with open('test1.bf') as bf_file:
