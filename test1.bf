@@ -24,5 +24,5 @@
     ]                        End outer skip loop (jump to here if ((character minus 1)/32) was not 2 or 3)
     <[-]                     Clear remainder from first division if second division was skipped
     <.[-]                    Output ROT13ed character from copy and clear it
-    <-,+                     Read next character
+    <-,[]+                     Read next character
 ]                            End character reading loop
