@@ -32,15 +32,15 @@ def build_ast(raw_bf_code):
     for token in filter(bool, map(get_token, raw_bf_code)):
         if not accumulator:
             accumulator.append(token)
-        elif token['tag'] not in ['address', 'cell value']:
-            accumulator.append(token)
-        elif token['tag'] != accumulator[-1]['tag']:
-            accumulator.append(token)
-        else:
+        elif token['tag'] == accumulator[-1]['tag'] and token['tag'] in ['address', 'cell value']:
             value = token['value'] + accumulator[-1]['value']
 
             if value != 0:
                 accumulator[-1] = {'tag': token['tag'], 'value': value}
+        elif token['tag'] == 'end loop' and accumulator[-1]['tag'] == 'start loop':
+            del accumulator[-1]
+        else:
+            accumulator.append(token)
 
     return accumulator
 
