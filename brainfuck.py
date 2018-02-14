@@ -1,3 +1,17 @@
+def is_balanced(raw_bf_code):
+    balance = 0
+
+    for char in raw_bf_code:
+        if char == ']':
+            if balance == 0:
+                return False
+
+            balance -= 1
+        elif char == '[':
+            balance += 1
+
+    return balance == 0
+
 def build_ast(raw_bf_code):
     tokens = [{'tag': ''}]
 
@@ -87,6 +101,9 @@ def emit_py_code(ast, indentation='    '):
     return '\n'.join(statements)
 
 def brainfuck_to_python(raw_bf_code):
+    if not is_balanced(raw_bf_code):
+        raise Exception('Unbalanced loops')
+
     return emit_py_code(build_ast(raw_bf_code))
 
 def main():
