@@ -1,1 +1,1 @@
-from .bf_to_py import brainfuck_to_python
+from .brainfuck_to_python import brainfuck_to_python

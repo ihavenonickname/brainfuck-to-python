@@ -69,6 +69,20 @@ def build_ast(raw_bf_code):
 
     return tokens[1:]
 
+def clear_cell(ast):
+    new_ast = []
+    i = 0
+
+    while i < len(ast):
+        if ast[i]['tag'] == 'start loop' and ast[i + 1]['tag'] == 'cell value' and ast[i + 1]['value'] == -1 and ast[i + 2]['tag'] == 'end loop':
+            new_ast.append({'tag': 'clear'})
+            i += 3
+        else:
+            new_ast.append(ast[i])
+            i += 1
+
+    return new_ast
+
 def emit_py_code(ast, indentation='    '):
     def incrementer(n):
         sign = '+' if n > 0 else '-'
@@ -97,12 +111,14 @@ def emit_py_code(ast, indentation='    '):
             level += 1
         elif node['tag'] == 'end loop':
             level -= 1
+        elif node['tag'] == 'clear':
+            statements.append(indentation * level + 'cells[cell_addr] = 0')
 
     return '\n'.join(statements)
 
 def brainfuck_to_python(raw_bf_code):
     if not is_balanced(raw_bf_code):
-        raise Exception('Unbalanced loops')
+        raise Exception('Unbalanced loop')
 
     return emit_py_code(build_ast(raw_bf_code))
 
