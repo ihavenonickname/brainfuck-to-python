@@ -1,4 +1,5 @@
 # brainfuck-to-python
-Compiles your brainfuck programs into (somewhat) readable Python code
+
+Compile your brainfuck code into (somewhat) readable Python code
 
 **Work in progress**
