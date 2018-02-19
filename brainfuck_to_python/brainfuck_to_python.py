@@ -1,3 +1,5 @@
+from .optimizations import optimize
+
 def is_balanced(raw_bf_code):
     balance = 0
 
@@ -13,80 +15,32 @@ def is_balanced(raw_bf_code):
     return balance == 0
 
 def build_ast(raw_bf_code):
-    tokens = [{'tag': ''}]
+    tokens = []
 
     for lexeme in raw_bf_code:
         if lexeme == '>':
-            if tokens[-1]['tag'] == 'address':
-                if tokens[-1]['value'] == -1:
-                    del tokens[-1]
-                else:
-                    tokens[-1]['value'] += 1
-            else:
-                tokens.append({'tag': 'address', 'value': 1})
-
+            tokens.append({'tag': 'address', 'value': 1})
         elif lexeme == '<':
-            if tokens[-1]['tag'] == 'address':
-                if tokens[-1]['value'] == 1:
-                    del tokens[-1]
-                else:
-                    tokens[-1]['value'] -= 1
-            else:
-                tokens.append({'tag': 'address', 'value': -1})
-
+            tokens.append({'tag': 'address', 'value': -1})
         elif lexeme == '+':
-            if tokens[-1]['tag'] == 'cell value':
-                if tokens[-1]['value'] == -1:
-                    del tokens[-1]
-                else:
-                    tokens[-1]['value'] += 1
-            else:
-                tokens.append({'tag': 'cell value', 'value': 1})
-
+            tokens.append({'tag': 'cell value', 'value': 1})
         elif lexeme == '-':
-            if tokens[-1]['tag'] == 'cell value':
-                if tokens[-1]['value'] == 1:
-                    del tokens[-1]
-                else:
-                    tokens[-1]['value'] -= 1
-            else:
-                tokens.append({'tag': 'cell value', 'value': -1})
-
+            tokens.append({'tag': 'cell value', 'value': -1})
         elif lexeme == '.':
             tokens.append({'tag': 'output'})
-
         elif lexeme == ',':
             tokens.append({'tag': 'input'})
-
         elif lexeme == '[':
             tokens.append({'tag': 'start loop'})
-
         elif lexeme == ']':
-            if tokens[-1]['tag'] == 'start loop':
-                del tokens[-1]
-            else:
-                tokens.append({'tag': 'end loop'})
+            tokens.append({'tag': 'end loop'})
 
-    return tokens[1:]
-
-def clear_cell(ast):
-    new_ast = []
-    i = 0
-
-    while i < len(ast):
-        if ast[i]['tag'] == 'start loop' and ast[i + 1]['tag'] == 'cell value' and ast[i + 1]['value'] == -1 and ast[i + 2]['tag'] == 'end loop':
-            new_ast.append({'tag': 'clear'})
-            i += 3
-        else:
-            new_ast.append(ast[i])
-            i += 1
-
-    return new_ast
+    return tokens
 
 def emit_py_code(ast, indentation='    '):
     def incrementer(n):
         sign = '+' if n > 0 else '-'
-        return sign + '= ' + str(abs(n))
+        return f'{sign}= {abs(n)}'
 
     level = 0
     statements = [
@@ -120,7 +74,10 @@ def brainfuck_to_python(raw_bf_code):
     if not is_balanced(raw_bf_code):
         raise Exception('Unbalanced loop')
 
-    return emit_py_code(build_ast(raw_bf_code))
+    ast = build_ast(raw_bf_code)
+    ast = optimize(ast)
+
+    return emit_py_code(ast)
 
 def main():
     with open('test1.bf') as bf_file:

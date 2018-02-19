@@ -13,9 +13,10 @@ class TestBrainfuckToPython(unittest.TestCase):
 
     def test_basic(self):
         bf = '''
-        +>+>-<-<
+        ,+>+>-<-<.
         '''
         py = self._to_py_code([
+            'cells[cell_addr] = ord(input())',
             'cells[cell_addr] += 1',
             'cell_addr += 1',
             'cells[cell_addr] += 1',
@@ -23,49 +24,8 @@ class TestBrainfuckToPython(unittest.TestCase):
             'cells[cell_addr] -= 1',
             'cell_addr -= 1',
             'cells[cell_addr] -= 1',
-            'cell_addr -= 1'
-        ])
-
-        self.assertEqual(bf_to_py(bf), py)
-
-    def test_indentation(self):
-        bf = '''
-        >[>[>]+]-
-        '''
-        py = self._to_py_code([
-            'cell_addr += 1',
-            'while cells[cell_addr]:',
-            '    cell_addr += 1',
-            '    while cells[cell_addr]:',
-            '        cell_addr += 1',
-            '    cells[cell_addr] += 1',
-            'cells[cell_addr] -= 1',
-        ])
-
-        self.assertEqual(bf_to_py(bf), py)
-
-    def test_reduction_instructions(self):
-        bf = '''
-        +++--->>>---<<<+++
-        '''
-        py = self._to_py_code([
-            'cell_addr += 3',
-            'cells[cell_addr] -= 3',
-            'cell_addr -= 3',
-            'cells[cell_addr] += 3'
-        ])
-
-        self.assertEqual(bf_to_py(bf), py)
-
-    def test_remove_empty_loops(self):
-        bf = '''
-        +++[]--->>>---[]<<<+++[+-]
-        '''
-        py = self._to_py_code([
-            'cell_addr += 3',
-            'cells[cell_addr] -= 3',
-            'cell_addr -= 3',
-            'cells[cell_addr] += 3'
+            'cell_addr -= 1',
+            'print(chr(cells[cell_addr]), end="")'
         ])
 
         self.assertEqual(bf_to_py(bf), py)
@@ -84,4 +44,57 @@ class TestBrainfuckToPython(unittest.TestCase):
 
             self.assertEqual(str(ctx.exception), 'Unbalanced loop')
 
+    def test_indentation(self):
+        bf = '''
+        >[>[>]+]-
+        '''
+        py = self._to_py_code([
+            'cell_addr += 1',
+            'while cells[cell_addr]:',
+            '    cell_addr += 1',
+            '    while cells[cell_addr]:',
+            '        cell_addr += 1',
+            '    cells[cell_addr] += 1',
+            'cells[cell_addr] -= 1',
+        ])
 
+        self.assertEqual(bf_to_py(bf), py)
+
+    def test_merge_instructions(self):
+        bf = '''
+        <<>>+++--->>>---<<<+++
+        '''
+        py = self._to_py_code([
+            'cell_addr += 3',
+            'cells[cell_addr] -= 3',
+            'cell_addr -= 3',
+            'cells[cell_addr] += 3'
+        ])
+
+
+        self.assertEqual(bf_to_py(bf), py)
+
+    def test_remove_empty_loops(self):
+        bf = '''
+        +++[]--->>>---[]<<<+++[]
+        '''
+        py = self._to_py_code([
+            'cell_addr += 3',
+            'cells[cell_addr] -= 3',
+            'cell_addr -= 3',
+            'cells[cell_addr] += 3'
+        ])
+
+        self.assertEqual(bf_to_py(bf), py)
+
+    def test_clear_cell_pattern(self):
+        bf = '''
+        +++[-].
+        '''
+        py = self._to_py_code([
+            'cells[cell_addr] += 3',
+            'cells[cell_addr] = 0',
+            'print(chr(cells[cell_addr]), end="")'
+        ])
+
+        self.assertEqual(bf_to_py(bf), py)
