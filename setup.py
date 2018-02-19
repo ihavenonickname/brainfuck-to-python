@@ -7,6 +7,7 @@ def tests():
 
 setup(
     name='brainfuck_to_python',
+    packages=['brainfuck_to_python'],
     version='1.0.0',
     description='Translate brainfuck code to Python code',
     author='Gabriel Blank Stift Mousquer',
